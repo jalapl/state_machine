@@ -8,8 +8,7 @@ describe StateMachine do
       attr_accessor :before_flag, :after_flag
 
       state :pending, initial: true
-      state :confirmed
-      state :removed
+      state :confirmed, :removed
 
       event :confirm, before: :set_before_flag, after: proc { set_after_flag } do
         transitions from: [:pending], to: :confirmed
@@ -74,6 +73,15 @@ describe StateMachine do
         state :draft, initial: true
       end
     end.to raise_error(StateMachine::DuplicatedInitialState)
+  end
+
+  it 'raises an error if initial state is defined for more than new state in one line' do
+    expect do
+      Class.new do
+        include StateMachine
+        state :pending, :draft, initial: true
+      end
+    end.to raise_error(StateMachine::AmbiguousInitialState)
   end
 
   it 'changes state based on predefined event' do

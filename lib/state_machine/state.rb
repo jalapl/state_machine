@@ -3,20 +3,23 @@ module StateMachine
     module ClassMethods
       attr_accessor :states, :initial_state
 
-      def state(state, **args)
+      def state(*new_states, **args)
         @states ||= []
 
-        raise DuplicatedState if @states.include?(state)
+        raise DuplicatedState unless (@states & new_states).empty?
         raise DuplicatedInitialState if args[:initial] && !@initial_state.nil?
+        raise AmbiguousInitialState if args[:initial] && new_states.size > 1
 
-        @states << state
-        @initial_state = state if args[:initial]
-        define_check_state_method(state)
+        @states = (@states << new_states).flatten
+        @initial_state = new_states.first if args[:initial]
+        define_check_state_method(new_states)
       end
 
-      def define_check_state_method(state)
-        define_method("#{state}?") do
-          @state == state
+      def define_check_state_method(new_states)
+        new_states.each do |new_state|
+          define_method("#{new_state}?") do
+            @state == new_state
+          end
         end
       end
     end

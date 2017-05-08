@@ -3,4 +3,5 @@ module StateMachine
   GuardCheckFailed = Class.new(StandardError)
   DuplicatedState = Class.new(StandardError)
   DuplicatedInitialState = Class.new(StandardError)
+  AmbiguousInitialState = Class.new(StandardError)
 end
