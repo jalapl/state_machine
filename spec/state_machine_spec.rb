@@ -7,15 +7,17 @@ describe StateMachine do
 
       attr_accessor :before_flag, :after_flag
 
-      state :pending, initial: true
-      state :confirmed, :removed
+      state_machine do
+        state :pending, initial: true
+        state :confirmed, :removed
 
-      event :confirm, before: :set_before_flag, after: proc { set_after_flag } do
-        transitions from: [:pending], to: :confirmed
-      end
+        event :confirm, before: :set_before_flag, after: proc { set_after_flag } do
+          transitions from: [:pending], to: :confirmed
+        end
 
-      event :remove, guard: :removing_possible? do
-        transitions from: :confirmed , to: :removed
+        event :remove, guard: :removing_possible? do
+          transitions from: :confirmed , to: :removed
+        end
       end
 
       def set_before_flag
@@ -59,8 +61,10 @@ describe StateMachine do
     expect do
       Class.new do
         include StateMachine
-        state :pending
-        state :pending
+        state_machine do
+          state :pending
+          state :pending
+        end
       end
     end.to raise_error(StateMachine::DuplicatedState)
   end
@@ -69,8 +73,10 @@ describe StateMachine do
     expect do
       Class.new do
         include StateMachine
-        state :pending, initial: true
-        state :draft, initial: true
+        state_machine do
+          state :pending, initial: true
+          state :draft, initial: true
+        end
       end
     end.to raise_error(StateMachine::DuplicatedInitialState)
   end
@@ -79,7 +85,9 @@ describe StateMachine do
     expect do
       Class.new do
         include StateMachine
-        state :pending, :draft, initial: true
+        state_machine do
+          state :pending, :draft, initial: true
+        end
       end
     end.to raise_error(StateMachine::AmbiguousInitialState)
   end
