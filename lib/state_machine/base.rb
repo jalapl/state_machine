@@ -5,6 +5,12 @@ module StateMachine
 
       def_delegators :@state_collection, :states, :initial_state
 
+      attr_accessor :options
+
+      def whiny_transitions?
+        options[:whiny_transitions] == true
+      end
+
       def state_collection
         @state_collection ||= StateMachine::StateCollection.new
       end
@@ -13,8 +19,11 @@ module StateMachine
         @event_collection ||= StateMachine::EventCollection.new
       end
 
-      def state_machine(&block)
+      def state_machine(**args, &block)
+        self.options = args
+
         StateMachine::StateMachineFactory.define(state_collection, event_collection, &block)
+
         define_check_state_methods
         define_may_methods
         define_event_methods
@@ -23,6 +32,7 @@ module StateMachine
       def define_event_methods
         event_collection.all.each do |event|
           define_method(event.name) do
+            return false if !public_send("may_#{event.name}?") && self.class.whiny_transitions?
             raise InvalidTransition unless public_send("may_#{event.name}?")
             raise GuardCheckFailed if event.guard && !instance_eval(&event.guard)
 

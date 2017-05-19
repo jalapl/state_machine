@@ -108,6 +108,28 @@ describe StateMachine do
     expect { test_class_instance.confirm }.to raise_error(StateMachine::InvalidTransition)
   end
 
+  it 'returns false when transition is not possible and whiny transitions are enabled' do
+    test_class = Class.new do
+      include StateMachine
+
+      state_machine whiny_transitions: true do
+        state :pending, initial: true
+        state :confirmed, :removed
+
+        event :confirm do
+          transitions from: [:pending], to: :confirmed
+        end
+
+        event :remove do
+          transitions from: :confirmed, to: :removed
+        end
+      end
+    end
+
+    test_class_instance = test_class.new
+    expect(test_class_instance.remove).to eq(false)
+  end
+
   it 'executes before callback when transition succeeds' do
     test_class_instance.confirm
     expect(test_class_instance.before_flag).to be true
